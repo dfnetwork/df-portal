@@ -2,8 +2,8 @@ import { IsString } from 'class-validator';
 
 export class CreateOrganizationDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsString()
-  code: string;
+  code!: string;
 }

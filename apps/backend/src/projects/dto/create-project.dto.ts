@@ -2,12 +2,12 @@ import { IsOptional, IsString } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsString()
   description?: string;
 
   @IsString()
-  organizationId: string;
+  organizationId!: string;
 }
