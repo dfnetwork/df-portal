@@ -7,6 +7,7 @@ set -euo pipefail
 DOMAIN="${DOMAIN:-portal.example.com}"
 EMAIL="${EMAIL:-admin@example.com}"
 REPO_DIR="/opt/df-portal"
+REPO_URL="${REPO_URL:-https://github.com/dfnetwork/df-portal.git}"
 STORAGE_DIR="/opt/df-portal/storage"
 SERVICE_FILE="/etc/systemd/system/df-portal.service"
 
@@ -34,9 +35,11 @@ fi
 
 echo ">>> Cloning/updating repository..."
 if [ ! -d "$REPO_DIR/.git" ]; then
-  git clone https://github.com/your-org/df-portal.git "$REPO_DIR"
+  git clone --depth=1 "$REPO_URL" "$REPO_DIR"
 else
-  git -C "$REPO_DIR" pull
+  git -C "$REPO_DIR" remote set-url origin "$REPO_URL"
+  git -C "$REPO_DIR" fetch --depth=1 origin
+  git -C "$REPO_DIR" reset --hard origin/main
 fi
 
 echo ">>> Preparing environment..."
