@@ -1,14 +1,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-# Copy root manifests and workspaces
-COPY package.json ./
-COPY apps/backend/package.json apps/backend/package.json
-COPY apps/frontend/package.json apps/frontend/package.json
-COPY packages/shared/package.json packages/shared/package.json
-# Install deps (no lockfile to avoid npm ci failure)
-RUN npm install
-# Copy source
+# Copy entire repo (needed for file: deps)
 COPY . .
+# Install dependencies for all workspaces
+RUN npm install
+# Build shared types (optional but keeps dist consistent)
+RUN npm --workspace packages/shared run build
 # Build backend
 RUN npm --workspace apps/backend run build
 
