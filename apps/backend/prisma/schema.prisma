@@ -18,6 +18,7 @@ model User {
   memberships    ProjectMember[]
   orgMemberships OrganizationMember[]
   activities     ActivityLog[]
+  filesCreated   File[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
