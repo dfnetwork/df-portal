@@ -7,7 +7,14 @@ export class OrganizationService {
   constructor(private prisma: PrismaService) {}
 
   private isGlobalAdmin(role: Role) {
-    return [Role.OWNER, Role.STAFF, Role.MOD, Role.SUPPORT, Role.ADMIN].includes(role);
+    const elevated: Role[] = [
+      Role.OWNER,
+      Role.STAFF,
+      Role.MOD,
+      Role.SUPPORT,
+      Role.ADMIN,
+    ];
+    return elevated.includes(role);
   }
 
   async create(name: string, code: string, userId: string, role: Role) {

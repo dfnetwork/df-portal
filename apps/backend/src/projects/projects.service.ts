@@ -7,7 +7,14 @@ export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
   private isElevated(role: Role) {
-    return [Role.ADMIN, Role.OWNER, Role.STAFF, Role.MOD, Role.SUPPORT].includes(role);
+    const elevated: Role[] = [
+      Role.ADMIN,
+      Role.OWNER,
+      Role.STAFF,
+      Role.MOD,
+      Role.SUPPORT,
+    ];
+    return elevated.includes(role);
   }
 
   async listForUser(userId: string, role: Role) {
