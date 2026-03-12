@@ -50,21 +50,33 @@ export class AuthService {
         where: { code: dto.organizationCode },
         include: { organization: true },
       });
+
       if (
-        !invite ||
-        (invite.expiresAt && invite.expiresAt < new Date()) ||
-        (invite.maxUses && invite.uses >= invite.maxUses)
+        invite &&
+        (!invite.expiresAt || invite.expiresAt >= new Date()) &&
+        (!invite.maxUses || invite.uses < invite.maxUses)
       ) {
-        throw new UnauthorizedException('Invalid organization code');
+        orgMembershipData = {
+          organization: { connect: { id: invite.organizationId } },
+          role: OrgRole.DEV_FULLSTACK,
+        };
+        await this.prisma.organizationInvite.update({
+          where: { id: invite.id },
+          data: { uses: { increment: 1 } },
+        });
+      } else {
+        // fallback: allow direct org code match
+        const org = await this.prisma.organization.findUnique({
+          where: { code: dto.organizationCode },
+        });
+        if (!org) {
+          throw new UnauthorizedException('Invalid organization code');
+        }
+        orgMembershipData = {
+          organization: { connect: { id: org.id } },
+          role: OrgRole.DEV_FULLSTACK,
+        };
       }
-      orgMembershipData = {
-        organization: { connect: { id: invite.organizationId } },
-        role: OrgRole.DEV_FULLSTACK,
-      };
-      await this.prisma.organizationInvite.update({
-        where: { id: invite.id },
-        data: { uses: { increment: 1 } },
-      });
     }
 
     const user = await this.prisma.user.create({
