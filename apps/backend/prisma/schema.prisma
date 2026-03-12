@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String?
+  name           String
+  role           Role           @default(DEVELOPER)
+  authProviders  AuthProvider[]
+  sessions       Session[]
+  memberships    ProjectMember[]
+  orgMemberships OrganizationMember[]
+  activities     ActivityLog[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model AuthProvider {
+  id         String   @id @default(cuid())
+  provider   Provider
+  providerId String
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  createdAt  DateTime @default(now())
+  @@unique([provider, providerId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  jwtId     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model Project {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  organizationId String
+  members        ProjectMember[]
+  folders        Folder[]
+  files          File[]
+  activities     ActivityLog[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  role      Role     @default(DEVELOPER)
+  createdAt DateTime @default(now())
+  @@unique([projectId, userId])
+}
+
+model Folder {
+  id         String    @id @default(cuid())
+  name       String
+  project    Project   @relation(fields: [projectId], references: [id])
+  projectId  String
+  parent     Folder?   @relation("FolderToFolder", fields: [parentId], references: [id])
+  parentId   String?
+  children   Folder[]  @relation("FolderToFolder")
+  files      File[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  @@unique([projectId, parentId, name])
+}
+
+model File {
+  id          String   @id @default(cuid())
+  name        String
+  size        Int
+  mimeType    String
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   String
+  folder      Folder   @relation(fields: [folderId], references: [id])
+  folderId    String
+  path        String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([folderId, name])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Organization {
+  id          String               @id @default(cuid())
+  name        String
+  code        String               @unique
+  members     OrganizationMember[]
+  projects    Project[]
+  invites     OrganizationInvite[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model OrganizationMember {
+  id             String        @id @default(cuid())
+  user           User          @relation(fields: [userId], references: [id])
+  userId         String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId String
+  role           OrgRole       @default(DEV_FULLSTACK)
+  createdAt      DateTime      @default(now())
+  @@unique([userId, organizationId])
+}
+
+model OrganizationInvite {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId String
+  expiresAt      DateTime?
+  maxUses        Int?
+  uses           Int           @default(0)
+  createdAt      DateTime      @default(now())
+}
+
+enum Role {
+  OWNER
+  STAFF
+  MOD
+  SUPPORT
+  ADMIN
+  DEVELOPER
+}
+
+enum OrgRole {
+  ADMIN
+  DEV_FULLSTACK
+  DEV_FRONTEND
+  DEV_BACKEND
+  MAP_EDITOR
+  CAR_EDITOR
+  PED_EDITOR
+  HELPER
+}
+
+enum Provider {
+  EMAIL
+  GOOGLE
+  GITHUB
+  DISCORD
+}

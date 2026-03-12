@@ -1,0 +1,25 @@
+{
+  "name": "df-portal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Internal SaaS portal for software development company",
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace apps/frontend run dev",
+    "dev:backend": "npm --workspace apps/backend run start:dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:frontend": "npm --workspace apps/frontend run build",
+    "build:backend": "npm --workspace apps/backend run build",
+    "lint": "npm --workspace apps/frontend run lint && npm --workspace apps/backend run lint",
+    "format": "npm --workspace apps/frontend run format",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "npm --workspace apps/backend run prisma:generate"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
