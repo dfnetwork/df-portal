@@ -13,7 +13,7 @@ SERVICE_FILE="/etc/systemd/system/df-portal.service"
 
 echo ">>> Ensuring prerequisites (curl, git, docker)..."
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg git lsb-release
+apt-get install -y ca-certificates curl gnupg git lsb-release ufw
 
 . /etc/os-release
 DOCKER_OS="${ID:-ubuntu}"
@@ -88,6 +88,12 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable --now df-portal
+
+echo ">>> Configuring basic UFW firewall (SSH/HTTP/HTTPS)"
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 
 cat <<'EOF'
 Installation finished.

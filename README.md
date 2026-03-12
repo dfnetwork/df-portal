@@ -31,3 +31,4 @@ Internal SaaS portal for managing projects and files.
 3) `docker compose -f docker/docker-compose.yml up -d --build`.
 4) Run migrations and seed an admin user (via API or manual insert).
 5) Set up cron for `certbot renew` and reload nginx on success.
+6) Firewall: installer now adds UFW rules for 22/80/443 and enables UFW.
