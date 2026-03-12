@@ -1,16 +1,23 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+# Copy root manifests and workspaces
+COPY package.json ./
+COPY apps/backend/package.json apps/backend/package.json
+COPY apps/frontend/package.json apps/frontend/package.json
+COPY packages/shared/package.json packages/shared/package.json
+# Install deps (no lockfile to avoid npm ci failure)
+RUN npm install
+# Copy source
 COPY . .
-RUN npm run build
+# Build backend
+RUN npm --workspace apps/backend run build
 
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=builder /app/package*.json ./
-RUN npm ci --omit=dev
-COPY --from=builder /app/dist ./dist
-COPY prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/apps/backend/package.json ./apps/backend/package.json
+COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["node", "apps/backend/dist/main.js"]
