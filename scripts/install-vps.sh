@@ -8,6 +8,7 @@ DOMAIN="${DOMAIN:-portal.example.com}"
 EMAIL="${EMAIL:-admin@example.com}"
 REPO_DIR="/opt/df-portal"
 STORAGE_DIR="/opt/df-portal/storage"
+SERVICE_FILE="/etc/systemd/system/df-portal.service"
 
 echo ">>> Ensuring prerequisites (curl, git, docker)..."
 apt-get update -y
@@ -64,6 +65,26 @@ docker run --rm \
 
 echo ">>> Reloading nginx..."
 docker compose -f docker/docker-compose.yml exec nginx nginx -s reload || true
+
+echo ">>> Installing systemd service for auto-restart"
+cat > "$SERVICE_FILE" <<EOF
+[Unit]
+Description=DF Portal stack
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=$REPO_DIR
+ExecStart=/usr/bin/docker compose -f docker/docker-compose.yml up -d
+ExecStop=/usr/bin/docker compose -f docker/docker-compose.yml down
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now df-portal
 
 cat <<'EOF'
 Installation finished.
